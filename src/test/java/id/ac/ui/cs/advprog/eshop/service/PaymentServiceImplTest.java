@@ -105,6 +105,66 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void testAddPaymentBankTransferValidShouldBeSuccess() {
+        Map<String, String> bankTransferData = new HashMap<>();
+        bankTransferData.put("bankName", "BCA");
+        bankTransferData.put("referenceCode", "REF123456789012");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.BANK_TRANSFER.getValue(), bankTransferData);
+
+        assertEquals(PaymentStatus.SUCCESS.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentBankTransferEmptyBankNameShouldBeRejected() {
+        Map<String, String> bankTransferData = new HashMap<>();
+        bankTransferData.put("bankName", "");
+        bankTransferData.put("referenceCode", "REF123456789012");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.BANK_TRANSFER.getValue(), bankTransferData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentBankTransferEmptyReferenceCodeShouldBeRejected() {
+        Map<String, String> bankTransferData = new HashMap<>();
+        bankTransferData.put("bankName", "BCA");
+        bankTransferData.put("referenceCode", "");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.BANK_TRANSFER.getValue(), bankTransferData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentBankTransferNullBankNameShouldBeRejected() {
+        Map<String, String> bankTransferData = new HashMap<>();
+        bankTransferData.put("bankName", null);
+        bankTransferData.put("referenceCode", "REF123456789012");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.BANK_TRANSFER.getValue(), bankTransferData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentBankTransferNullReferenceCodeShouldBeRejected() {
+        Map<String, String> bankTransferData = new HashMap<>();
+        bankTransferData.put("bankName", "BCA");
+        bankTransferData.put("referenceCode", null);
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.BANK_TRANSFER.getValue(), bankTransferData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
     void testSetStatusSuccess() {
         Payment payment = new Payment("pay-001", PaymentMethod.VOUCHER.getValue(), paymentData);
         doReturn(payment).when(paymentRepository).save(any(Payment.class));
