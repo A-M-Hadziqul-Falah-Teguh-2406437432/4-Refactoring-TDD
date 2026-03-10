@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Repository
 public class ProductRepository {
-    private List<Product> productData = new ArrayList<>();
+    private final List<Product> productData = new ArrayList<>();
 
     public Product create(Product product) {
         if (product.getProductId() == null) {
@@ -42,7 +42,7 @@ public class ProductRepository {
                 return p;
             }
         }
-        return null; // Handle case where product is not found
+        return null;
     }
 
     public void delete(String id) {

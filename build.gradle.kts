@@ -42,6 +42,8 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	annotationProcessor("org.projectlombok:lombok")
+	testCompileOnly("org.projectlombok:lombok")
+	testAnnotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
 	testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
@@ -75,6 +77,7 @@ tasks.jacocoTestReport {
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
 	group = "verification"
+	useJUnitPlatform()
 
 	filter {
 		excludeTestsMatching("*FunctionalTest")
@@ -84,6 +87,7 @@ tasks.register<Test>("unitTest") {
 tasks.register<Test>("functionalTest") {
 	description = "Runs functional tests."
 	group = "verification"
+	useJUnitPlatform()
 
 	filter {
 		includeTestsMatching("*FunctionalTest")

@@ -1,34 +1,24 @@
-## 1. Perbaikan Masalah Kualitas Kode dan Strategi
+## TDD Reflection
 
-Selama latihan, saya menemukan beberapa masalah kualitas kode yang dilaporkan oleh SonarCloud. Salah satu masalah berkaitan dengan pengelompokan dependensi di `build.gradle.kts`, di mana dependensi tidak dikelompokkan berdasarkan konfigurasinya (misalnya `implementation`, `testImplementation`, `annotationProcessor`). Saya memperbaikinya dengan menyusun ulang dependensi ke dalam kelompok yang logis.
+### 1) Refleksi terhadap alur TDD (berdasarkan pertanyaan reflektif Percival, 2017)
 
-Saya juga menangani beberapa masalah kecil terkait maintainability seperti code smell dan peringatan struktural. Strategi saya dalam menyelesaikan masalah-masalah tersebut adalah:
+Menurut saya, alur TDD pada tutorial ini **cukup berguna** karena memberi arah kerja yang jelas: mulai dari menulis test, melihat test gagal, lalu menulis implementasi minimum sampai test lulus. Pola ini membantu saya fokus pada behavior yang memang dibutuhkan, bukan asal menebak-nebak desain dari awal.
 
-- Membaca deskripsi masalah di SonarCloud dengan cermat.
-- Memahami apakah masalah tersebut memengaruhi kebenaran (correctness), keamanan (security), atau kemudahan pemeliharaan (maintainability).
-- Menerapkan perbaikan yang terarah tanpa mengubah fungsionalitas sistem yang sudah direncanakan.
+Namun, alur ini belum sepenuhnya cukup jika hanya berhenti pada “test lulus”. Untuk iterasi berikutnya, saya perlu:
 
-Secara keseluruhan, pendekatan saya : menemukan masalah, memahami akar penyebabnya, menerapkan perbaikan yang minimal namun tepat, lalu memverifikasi hasilnya melalui pipeline CI.
+- Menambah variasi kasus edge-case (data null, input kosong, duplikasi data, dan ID tidak ditemukan) secara lebih sistematis.
+- Melakukan refactor test setelah hijau agar test tetap mudah dibaca dan tidak duplikatif.
+- Meninjau kualitas assertion agar tidak hanya memeriksa output akhir, tetapi juga interaksi penting (mis. verifikasi pemanggilan repository).
+- Menjalankan test secara rutin setelah tiap perubahan kecil supaya sumber error lebih cepat terdeteksi.
 
-**Jacoco 100% Coverage :**
-<img width="1919" height="469" alt="image" src="https://github.com/user-attachments/assets/9ae0fa97-829b-4883-8af9-947df5d1e611" />
+### 2) Refleksi penerapan prinsip F.I.R.S.T pada unit test
 
-**CD :**
-<img width="958" height="875" alt="image" src="https://github.com/user-attachments/assets/b9f20f92-830a-4093-ae81-e63fa30095f4" />
+Secara umum, test yang dibuat sudah mengarah ke prinsip **F.I.R.S.T**, tetapi masih ada ruang perbaikan:
 
-**Deployment (AWS Academy):**
-<img width="1311" height="381" alt="image" src="https://github.com/user-attachments/assets/7508b4c4-c222-4a18-9c16-363ba92a4429" />
-http://34.227.65.127:8080/product/list  
-**Important Note:**
-Waktu deployment tidak selalu aktif 24/7 untuk AWS Academy (~ 4 Jam dihentikan), dan harus dilakukan running lagi.
+- **Fast**: Unit test berbasis mock berjalan cepat, tetapi tetap perlu disiplin memisahkan unit test dari functional test agar feedback loop tetap singkat.
+- **Independent**: Sebagian besar test sudah independen karena data disiapkan ulang di `@BeforeEach`, tetapi perlu dijaga agar tidak ada ketergantungan urutan eksekusi.
+- **Repeatable**: Test repeatable karena tidak tergantung jaringan/DB eksternal, namun konsistensi environment (versi JDK/Gradle) tetap perlu dijaga.
+- **Self-validating**: Test sudah self-validating karena memakai assertion dan verifikasi yang jelas (pass/fail otomatis).
+- **Timely**: Test sudah ditulis sebelum/bersamaan implementasi pada banyak langkah, tetapi ke depan perlu lebih konsisten menulis test lebih dulu untuk semua perubahan behavior.
 
-
----
-
-## 2. Evaluasi Implementasi CI/CD
-
-Implementasi saat ini telah memenuhi definisi **Continuous Integration**, tetapi belum sepenuhnya mencapai **Continuous Deployment** karena adanya kendala pada proses deployment.
-
-**Continuous Integration** telah berhasil diterapkan karena setiap push dan pull request secara otomatis memicu workflow CI di GitHub Actions. Workflow tersebut melakukan kompilasi proyek, menjalankan seluruh rangkaian pengujian otomatis, serta melakukan analisis kode statis menggunakan SonarCloud. Hal ini memastikan bahwa masalah integrasi, kegagalan pengujian, dan masalah kualitas kode dapat terdeteksi lebih awal sebelum perubahan digabungkan ke branch utama. Quality gate otomatis juga memastikan standar kualitas minimum tetap terpenuhi.
-
-Selain itu, **Continuous Deployment** juga berhasil diimplementasikan dengan memanfaatkan layanan AWS EC2 sebagai lingkungan deployment. Setelah perubahan berhasil melewati tahap Continuous Integration, GitHub Actions secara otomatis membangun artefak aplikasi (file JAR), mengirimkannya ke instance EC2 melalui koneksi SSH, dan menjalankan ulang aplikasi pada server. Proses ini memungkinkan setiap perubahan pada branch utama langsung ter-deploy tanpa intervensi manual, sehingga memenuhi karakteristik Continuous Deployment.
+Perbaikan berikutnya saat membuat test tambahan adalah memastikan setiap test tetap kecil, satu tujuan per test, nama method lebih deskriptif terhadap skenario, serta memperluas cakupan kasus negatif tanpa membuat test menjadi rapuh.

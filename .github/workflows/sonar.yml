@@ -32,8 +32,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Provided automatically by GitHub
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Your repository secret
         run: |
+          SONAR_PROJECT_KEY="${GITHUB_REPOSITORY/\//_}"
           ./gradlew build jacocoTestReport sonar \
-            -Dsonar.projectKey=A-M-Hadziqul-Falah-Teguh-2406437432_2-CICD-Devops \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
             -Dsonar.organization=a-m-hadziqul-falah-teguh-2406437432 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/test/jacocoTestReport.xml
