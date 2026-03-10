@@ -63,6 +63,48 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void testAddPaymentVoucherValidShouldBeSuccess() {
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), paymentData);
+
+        assertEquals(PaymentStatus.SUCCESS.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherInvalidLengthShouldBeRejected() {
+        Map<String, String> invalidVoucherData = new HashMap<>();
+        invalidVoucherData.put("voucherCode", "ESHOP1234ABC567");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), invalidVoucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherInvalidPrefixShouldBeRejected() {
+        Map<String, String> invalidVoucherData = new HashMap<>();
+        invalidVoucherData.put("voucherCode", "SHOPX1234ABC5678");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), invalidVoucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
+    void testAddPaymentVoucherWithoutEightDigitsShouldBeRejected() {
+        Map<String, String> invalidVoucherData = new HashMap<>();
+        invalidVoucherData.put("voucherCode", "ESHOPABCDABCD1234");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payment result = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), invalidVoucherData);
+
+        assertEquals(PaymentStatus.REJECTED.getValue(), result.getStatus());
+    }
+
+    @Test
     void testSetStatusSuccess() {
         Payment payment = new Payment("pay-001", PaymentMethod.VOUCHER.getValue(), paymentData);
         doReturn(payment).when(paymentRepository).save(any(Payment.class));
