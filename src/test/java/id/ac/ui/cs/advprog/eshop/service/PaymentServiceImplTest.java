@@ -74,6 +74,28 @@ class PaymentServiceImplTest {
     }
 
     @Test
+    void testSetStatusSuccessAlsoUpdatesOrderStatus() {
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Payment payment = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), paymentData);
+
+        paymentService.setStatus(payment, PaymentStatus.SUCCESS.getValue());
+
+        assertEquals("SUCCESS", order.getStatus());
+    }
+
+    @Test
+    void testSetStatusRejectedAlsoUpdatesOrderStatusToFailed() {
+        Map<String, String> invalidVoucherData = new HashMap<>();
+        invalidVoucherData.put("voucherCode", "INVALID123");
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Payment payment = paymentService.addPayment(order, PaymentMethod.VOUCHER.getValue(), invalidVoucherData);
+
+        paymentService.setStatus(payment, PaymentStatus.REJECTED.getValue());
+
+        assertEquals("FAILED", order.getStatus());
+    }
+
+    @Test
     void testSetStatusInvalidStatus() {
         Payment payment = new Payment("pay-001", PaymentMethod.VOUCHER.getValue(), paymentData);
 
