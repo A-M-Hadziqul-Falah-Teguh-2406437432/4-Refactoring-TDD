@@ -21,12 +21,9 @@ public class PaymentServiceImpl implements PaymentService {
     private static final String VOUCHER_METHOD = "VOUCHER";
     private static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
 
-    private static final int VOUCHER_LENGTH = 16;
-    private static final int VOUCHER_NUMERIC_COUNT = 8;
-    private static final String VOUCHER_PREFIX = "ESHOP";
-
     @Autowired
     private PaymentRepository paymentRepository;
+    private final VoucherCodeValidator voucherCodeValidator = new VoucherCodeValidator();
 
     @Override
     public Payment addPayment(Order order, String method, Map<String, String> paymentData) {
@@ -70,7 +67,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String resolveVoucherStatus(Map<String, String> paymentData) {
-        return isValidVoucherCode(paymentData.get(VOUCHER_CODE_KEY))
+        return voucherCodeValidator.isValid(paymentData.get(VOUCHER_CODE_KEY))
                 ? PaymentStatus.SUCCESS.getValue()
                 : PaymentStatus.REJECTED.getValue();
     }
@@ -81,17 +78,6 @@ public class PaymentServiceImpl implements PaymentService {
         return isBlank(bankName) || isBlank(referenceCode)
                 ? PaymentStatus.REJECTED.getValue()
                 : PaymentStatus.SUCCESS.getValue();
-    }
-
-    private boolean isValidVoucherCode(String voucherCode) {
-        if (voucherCode == null || voucherCode.length() != VOUCHER_LENGTH || !voucherCode.startsWith(VOUCHER_PREFIX)) {
-            return false;
-        }
-        return countNumericCharacters(voucherCode) == VOUCHER_NUMERIC_COUNT;
-    }
-
-    private long countNumericCharacters(String value) {
-        return value.chars().filter(Character::isDigit).count();
     }
 
     private boolean isBlank(String value) {
