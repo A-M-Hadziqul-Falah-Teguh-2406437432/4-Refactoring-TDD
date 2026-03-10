@@ -24,6 +24,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
     private final VoucherCodeValidator voucherCodeValidator = new VoucherCodeValidator();
+    private final BankTransferValidator bankTransferValidator = new BankTransferValidator();
 
     @Override
     public Payment addPayment(Order order, String method, Map<String, String> paymentData) {
@@ -75,13 +76,9 @@ public class PaymentServiceImpl implements PaymentService {
     private String resolveBankTransferStatus(Map<String, String> paymentData) {
         String bankName = paymentData.get(BANK_NAME_KEY);
         String referenceCode = paymentData.get(REFERENCE_CODE_KEY);
-        return isBlank(bankName) || isBlank(referenceCode)
-                ? PaymentStatus.REJECTED.getValue()
-                : PaymentStatus.SUCCESS.getValue();
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
+        return bankTransferValidator.isValid(bankName, referenceCode)
+                ? PaymentStatus.SUCCESS.getValue()
+                : PaymentStatus.REJECTED.getValue();
     }
 
     private void updateOrderStatus(Payment payment, String paymentStatus) {
@@ -95,4 +92,5 @@ public class PaymentServiceImpl implements PaymentService {
             payment.getOrder().setStatus(OrderStatus.FAILED.getValue());
         }
     }
+
 }
