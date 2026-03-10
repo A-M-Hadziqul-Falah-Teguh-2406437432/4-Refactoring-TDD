@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.eshop.service;
 
-import id.ac.ui.cs.advprog.eshop.enums.PaymentMethod;
 import id.ac.ui.cs.advprog.eshop.enums.PaymentStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Payment;
@@ -15,6 +14,16 @@ import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    private static final String VOUCHER_CODE_KEY = "voucherCode";
+    private static final String BANK_NAME_KEY = "bankName";
+    private static final String REFERENCE_CODE_KEY = "referenceCode";
+    private static final String VOUCHER_METHOD = "VOUCHER";
+    private static final String BANK_TRANSFER_METHOD = "BANK_TRANSFER";
+
+    private static final int VOUCHER_LENGTH = 16;
+    private static final int VOUCHER_NUMERIC_COUNT = 8;
+    private static final String VOUCHER_PREFIX = "ESHOP";
+
     @Autowired
     private PaymentRepository paymentRepository;
 
@@ -46,35 +55,40 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String resolveInitialStatus(String method, Map<String, String> paymentData) {
-        if (PaymentMethod.VOUCHER.getValue().equals(method)) {
-            return isValidVoucherCode(paymentData.get("voucherCode"))
-                    ? PaymentStatus.SUCCESS.getValue()
-                    : PaymentStatus.REJECTED.getValue();
+        if (paymentData == null) {
+            return PaymentStatus.REJECTED.getValue();
         }
 
-        if (PaymentMethod.BANK_TRANSFER.getValue().equals(method)) {
-            String bankName = paymentData.get("bankName");
-            String referenceCode = paymentData.get("referenceCode");
-            return isBlank(bankName) || isBlank(referenceCode)
-                    ? PaymentStatus.REJECTED.getValue()
-                    : PaymentStatus.SUCCESS.getValue();
-        }
+        return switch (method) {
+            case VOUCHER_METHOD -> resolveVoucherStatus(paymentData);
+            case BANK_TRANSFER_METHOD -> resolveBankTransferStatus(paymentData);
+            default -> PaymentStatus.REJECTED.getValue();
+        };
+    }
 
-        return PaymentStatus.REJECTED.getValue();
+    private String resolveVoucherStatus(Map<String, String> paymentData) {
+        return isValidVoucherCode(paymentData.get(VOUCHER_CODE_KEY))
+                ? PaymentStatus.SUCCESS.getValue()
+                : PaymentStatus.REJECTED.getValue();
+    }
+
+    private String resolveBankTransferStatus(Map<String, String> paymentData) {
+        String bankName = paymentData.get(BANK_NAME_KEY);
+        String referenceCode = paymentData.get(REFERENCE_CODE_KEY);
+        return isBlank(bankName) || isBlank(referenceCode)
+                ? PaymentStatus.REJECTED.getValue()
+                : PaymentStatus.SUCCESS.getValue();
     }
 
     private boolean isValidVoucherCode(String voucherCode) {
-        if (voucherCode == null || voucherCode.length() != 16 || !voucherCode.startsWith("ESHOP")) {
+        if (voucherCode == null || voucherCode.length() != VOUCHER_LENGTH || !voucherCode.startsWith(VOUCHER_PREFIX)) {
             return false;
         }
+        return countNumericCharacters(voucherCode) == VOUCHER_NUMERIC_COUNT;
+    }
 
-        int numberCount = 0;
-        for (char c : voucherCode.toCharArray()) {
-            if (Character.isDigit(c)) {
-                numberCount++;
-            }
-        }
-        return numberCount == 8;
+    private long countNumericCharacters(String value) {
+        return value.chars().filter(Character::isDigit).count();
     }
 
     private boolean isBlank(String value) {
