@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.eshop.model;
 
-import id.ac.ui.cs.advprog.eshop.enums.PaymentMethod;
 import id.ac.ui.cs.advprog.eshop.enums.PaymentStatus;
 import lombok.Getter;
 
@@ -12,6 +11,7 @@ public class Payment {
     private String method;
     private String status;
     private Map<String, String> paymentData;
+    private Order order;
 
     public Payment(String id, String method, Map<String, String> paymentData) {
         if (method == null || method.isEmpty()) {
@@ -39,5 +39,9 @@ public class Payment {
             throw new IllegalArgumentException();
         }
         this.status = status;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 }

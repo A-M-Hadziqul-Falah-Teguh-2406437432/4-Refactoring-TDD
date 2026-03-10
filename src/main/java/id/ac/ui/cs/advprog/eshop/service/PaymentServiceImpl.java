@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.eshop.service;
 
+import id.ac.ui.cs.advprog.eshop.enums.OrderStatus;
 import id.ac.ui.cs.advprog.eshop.enums.PaymentStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Payment;
@@ -30,6 +31,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment addPayment(Order order, String method, Map<String, String> paymentData) {
         Payment payment = new Payment(UUID.randomUUID().toString(), method, paymentData);
+        payment.setOrder(order);
         payment.setStatus(resolveInitialStatus(method, paymentData));
         return paymentRepository.save(payment);
     }
@@ -37,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Payment setStatus(Payment payment, String status) {
         payment.setStatus(status);
+        updateOrderStatus(payment, status);
         return paymentRepository.save(payment);
     }
 
@@ -93,5 +96,17 @@ public class PaymentServiceImpl implements PaymentService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private void updateOrderStatus(Payment payment, String paymentStatus) {
+        if (payment.getOrder() == null) {
+            return;
+        }
+
+        if (PaymentStatus.SUCCESS.getValue().equals(paymentStatus)) {
+            payment.getOrder().setStatus(OrderStatus.SUCCESS.getValue());
+        } else if (PaymentStatus.REJECTED.getValue().equals(paymentStatus)) {
+            payment.getOrder().setStatus(OrderStatus.FAILED.getValue());
+        }
     }
 }
